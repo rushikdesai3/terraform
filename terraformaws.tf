@@ -230,11 +230,25 @@ resource "aws_network_interface" "net_interface2" {
 	security_groups = [ "${aws_security_group.public_sec.id}" ]
 }
 
+#DB
+
+resource "aws_db_instance" "db" {
+	allocated_storage 		= 10
+	engine 				= "mysql"
+	engine_version 			= "5.6.27"
+	instance_class 			= "${var.db_instance_class}"
+	name				= "${var.dname}"
+	username			= "${var.dbuser}"
+	password 			= "${var.dbpassword}"	
+	db_subnet_group_name		= "${aws_subnet.public1.id}"
+	vpc_security_group_ids	 	= [ "${aws_security_group.public_sec.id}" ]
+}
+
 #Bitnami Instance
 
 resource "aws_instance" "bitnami" {
 	instance_type = "t2.micro"
-	ami = "ami-89f68a9f"
+	ami = "ami-9e2f0988"
 	key_name = "rushik-keypair"
 	availability_zone = "us-east-1a"
 	network_interface {
@@ -248,6 +262,7 @@ resource "aws_instance" "bitnami" {
 			iops = 100
 			delete_on_termination = true
 	}
+	user_data = "${data.template_file.bitnami_data.rendered}"
 	tags {
 			Name = "Rushik-TerraBitnami"	
 	}
@@ -290,4 +305,20 @@ data "template_file" "user_data_shell" {
 		   sudo echo '<?php phpinfo(); ?>' > /var/www/html/phpinfo.php
 		   EOF
 }
+
+data "template_file" "bitnami_data" {
+	template = <<-EOF
+			#!/bin/bash
+			sudo yum -y update
+			sudo yum -y install wget httpd php php-mysql
+			sudo cd /var/www/html
+			sudo chown -R ec2-user:apache /var/www
+			sudo chmod 2775 /var/www
+			sudo wget http://wordpress.org/wordpress-latest.tar.gz
+			sudo tar xzf wordpress-latest.tar.gz
+			sudo service httpd start
+			sudo chkconfig httpd on
+			EOF
+}
+
 
