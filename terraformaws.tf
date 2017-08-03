@@ -311,11 +311,11 @@ data "template_file" "bitnami_data" {
 			#!/bin/bash
 			sudo yum -y update
 			sudo yum -y install wget httpd php php-mysql
-			sudo cd /var/www/html
+			cd /var/www/html
 			sudo chown -R ec2-user:apache /var/www
 			sudo chmod 2775 /var/www
-			sudo wget http://wordpress.org/wordpress-latest.tar.gz
-			sudo tar xzf wordpress-latest.tar.gz
+			wget http://wordpress.org/wordpress-latest.tar.gz
+			tar xzf wordpress-latest.tar.gz
 			sudo service httpd start
 			sudo chkconfig httpd on
 			EOF
